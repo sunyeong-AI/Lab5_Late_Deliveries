@@ -1,0 +1,25 @@
+{
+  "threshold": 0.25,
+  "n_orders": 750,
+  "confusion_matrix": [
+    [
+      570,
+      63
+    ],
+    [
+      70,
+      47
+    ]
+  ],
+  "precision": 0.42727272727272725,
+  "recall": 0.4017094017094017,
+  "f1": 0.41409691629955947,
+  "roc_auc": 0.7522380200105319,
+  "flagged_orders": 110,
+  "missed_late_orders": 70,
+  "policy_costs": {
+    "flag_nobody": 1755,
+    "flag_everybody": 3000,
+    "model": 1490
+  }
+}
