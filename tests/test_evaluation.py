@@ -77,6 +77,57 @@ def test_mismatched_cost_inputs_are_rejected():
         evaluation.order_cost([1, 0], [True])
 
 
+@pytest.mark.parametrize(
+    "actual,flagged,invalid_name",
+    [
+        ([], [], "y_true"),
+        ([[0, 1]], [0, 1], "y_true"),
+        ([0, 2], [0, 1], "y_true"),
+        ([0, 1], [0, 2], "flagged"),
+    ],
+    ids=["empty", "two-dimensional", "nonbinary-label", "nonbinary-flag"],
+)
+def test_invalid_binary_vectors_are_rejected(actual, flagged, invalid_name):
+    """Protect the shared vector guard through the public cost function."""
+    message = f"{invalid_name} must be a nonempty one-dimensional binary vector"
+    with pytest.raises(ValueError, match=message):
+        evaluation.order_cost(actual, flagged)
+
+
+@pytest.mark.parametrize("threshold", [np.nan, -0.01, 1.01])
+def test_invalid_final_thresholds_are_rejected(threshold):
+    """Reject invalid policy cutoffs before calculating final metrics."""
+    with pytest.raises(
+        ValueError, match="threshold must be finite and between 0 and 1"
+    ):
+        evaluation.evaluate_probabilities([0, 1], [0.1, 0.8], threshold)
+
+
+def test_single_class_final_evaluation_is_rejected():
+    """AUC needs both classes, unlike cost calculation and threshold selection."""
+    with pytest.raises(
+        ValueError, match="y_true must contain both classes for ROC-AUC"
+    ):
+        evaluation.evaluate_probabilities([1, 1], [0.8, 0.9], 0.25)
+
+
+@pytest.mark.parametrize(
+    "function,kwargs",
+    [
+        (evaluation.choose_threshold, {}),
+        (evaluation.evaluate_probabilities, {"threshold": 0.25}),
+    ],
+    ids=["threshold-selection", "final-evaluation"],
+)
+@pytest.mark.parametrize(
+    "probability", [[0.1], [[0.1, 0.8]]], ids=["wrong-length", "wrong-shape"]
+)
+def test_mismatched_probability_inputs_are_rejected(function, kwargs, probability):
+    """Prevent broadcasting or flattening incompatible probability vectors."""
+    with pytest.raises(ValueError, match="same length and shape"):
+        function([0, 1], probability, **kwargs)
+
+
 @pytest.fixture
 def synthetic_training():
     """Invent sixty rows with sufficient examples of each class for five folds."""

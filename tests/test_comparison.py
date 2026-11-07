@@ -4,6 +4,9 @@ import numpy as np
 import pandas as pd
 import pytest
 from sklearn.compose import ColumnTransformer
+from sklearn.dummy import DummyClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
     f1_score,
@@ -12,6 +15,7 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 from sklearn.pipeline import Pipeline
+from sklearn.tree import DecisionTreeClassifier
 
 from latedeliveries import comparison
 from latedeliveries.pipeline import NUMERIC, SEED
@@ -55,6 +59,10 @@ def test_approved_candidate_roster():
         "random_forest",
         "balanced_decision_tree",
     ]
+    assert isinstance(candidates["dummy"], DummyClassifier)
+    assert isinstance(candidates["logistic_regression"], LogisticRegression)
+    assert isinstance(candidates["random_forest"], RandomForestClassifier)
+    assert isinstance(candidates["balanced_decision_tree"], DecisionTreeClassifier)
     assert candidates["dummy"].strategy == "most_frequent"
     assert candidates["balanced_decision_tree"].class_weight == "balanced"
     for name in ["logistic_regression", "random_forest", "balanced_decision_tree"]:
