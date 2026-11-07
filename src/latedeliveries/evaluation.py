@@ -6,6 +6,13 @@ import numpy as np
 import pandas as pd
 from numpy.typing import ArrayLike
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import (
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
 from sklearn.model_selection import StratifiedKFold, cross_val_predict
 
 from latedeliveries.data import make_orders
@@ -102,6 +109,49 @@ def run_threshold_analysis(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     table.to_csv(output_path, index=False)
     return threshold, table, probability
+
+
+def evaluate_probabilities(
+    y_true: ArrayLike,
+    probability: ArrayLike,
+    threshold: float,
+) -> dict:
+    """Compute fixed-threshold metrics and policy costs from one probability vector.
+
+    No estimator is fitted, threshold searched or policy selected here. AUC uses
+    the original probabilities; the confusion matrix has actual/predicted order
+    [0, 1], i.e. [[TN, FP], [FN, TP]]. Both actual classes are needed for AUC.
+    """
+    actual = _binary_vector(y_true, "y_true")
+    probability = np.asarray(probability, dtype=float)
+    if probability.shape != actual.shape:
+        raise ValueError("y_true and probability must have the same length and shape")
+    if (
+        not np.isfinite(probability).all()
+        or ((probability < 0) | (probability > 1)).any()
+    ):
+        raise ValueError("probability must contain finite values between 0 and 1")
+    if not np.isfinite(threshold) or not 0 <= threshold <= 1:
+        raise ValueError("threshold must be finite and between 0 and 1")
+    if np.unique(actual).size != 2:
+        raise ValueError("y_true must contain both classes for ROC-AUC")
+    flagged = probability >= threshold
+    return {
+        "threshold": float(threshold),
+        "n_orders": len(actual),
+        "confusion_matrix": confusion_matrix(actual, flagged, labels=[0, 1]).tolist(),
+        "precision": float(precision_score(actual, flagged, zero_division=0)),
+        "recall": float(recall_score(actual, flagged, zero_division=0)),
+        "f1": float(f1_score(actual, flagged, zero_division=0)),
+        "roc_auc": float(roc_auc_score(actual, probability)),
+        "flagged_orders": int(flagged.sum()),
+        "missed_late_orders": int((actual & ~flagged).sum()),
+        "policy_costs": {
+            "flag_nobody": order_cost(actual, np.zeros(len(actual), dtype=bool)),
+            "flag_everybody": order_cost(actual, np.ones(len(actual), dtype=bool)),
+            "model": order_cost(actual, flagged),
+        },
+    }
 
 
 if __name__ == "__main__":
