@@ -12,3 +12,13 @@ __pycache__/
 .ipynb_checkpoints/
 .venv/
 # Required source data, models and reports remain trackable.
+
+# Local agent instructions, planning documents and editor metadata.
+/AGENTS.md
+/REQUIREMENTS_CHECKLIST.md
+/FEEDBACK_CHECKLIST.md
+/LECTURE_MAPPING.md
+/IMPLEMENTATION_PLAN.md
+/.vscode/
+/.codex/
+/.agents/
