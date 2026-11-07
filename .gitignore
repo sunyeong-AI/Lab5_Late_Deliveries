@@ -1,0 +1,14 @@
+# Instructor references and local analysis must never be published.
+/reference/
+/tmp/
+/repro/
+/reproducibility/
+/*-repro/
+__pycache__/
+*.egg-info/
+.env
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.venv/
+# Required source data, models and reports remain trackable.
