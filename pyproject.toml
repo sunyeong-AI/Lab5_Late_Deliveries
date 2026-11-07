@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "latedeliveries"
+version = "0.1.0"
+description = "Leak-free late-delivery prediction for AIGC 5005 Lab 05"
+requires-python = ">=3.11"
+dependencies = ["scikit-learn", "pandas", "joblib"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+src = ["src", "tests"]
+extend-exclude = ["reference", "tmp", "repro", "reproducibility"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
